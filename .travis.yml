@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+- '0.10'
+deploy:
+  provider: npm
+  email: serveradmin@octoblu.com
+  api_key:
+    secure: O1g8wO8l1oGCH7/M1Efc4Fb7HnMdtefN7WIp7T6jsg9mI7J+7CKXQSj/XRTryFwSI7SmCUuxk7OytsWHT8L4MmjqzQHoLyssPGenpjOYju7Pli8OIto/OjhoUiflmOX3u4dcfyUHym+ZYAJo6zwqL8q9mvEkQ7iLF+ZGWKkPMBg3EmQG+alBrxTOO5GW0aINFDw7MYU8M+2ln5fXm8PTDN0Y+vDMou6JVKmotwG47BAFmRSdLYhuvV7rXJPW48iL1zh7i3n96JLi2JiPs9lziivPY+/LE+dznuaqExJX4FbMdF1nCXEgYs1ZYtvi0JmJzY0kfpForeAyQe5ARD9CukjhUCAGfk2IcDi/v2qaim8/BRBK6J8g9Yk60m9pypi2CNU8H/uNu/GnR/McHk1hnwYXdD5Q7keHWz4JXTUbq1mNSvKgmWU8BsQzdr5QZAW2eXWxAA06VGOcjhiqErfSWQr2flSMxGnvVYYTCl7aT3/QBbbcZTNwjsMXRcp4ZZf8cXxTdhGTzvz4ZCtlbmyrJiWyjF2zQdalWm202kfzRP6h8MQIDo4bTKi/wSX/Yd9QbKjEpI36wdbSDxUlPifhvtI/LrkOgKe91sSXxVwex2msIwte44mTacuIEPKQP/Zfe089DHjGWl2Tic1ZyY6iQMseCOjBRz7RsKEvOomwKuw=
+  on:
+    tags: true
+    repo: octoblu/nanocyte-configuration-saver-redis
+    all_branches: true
