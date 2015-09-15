@@ -4,7 +4,7 @@ ConfigrationSaverRedis = require '../index'
 describe 'ConfigrationSaverRedis', ->
   describe '->save', ->
     describe 'when called with flow data', ->
-      beforeEach ->
+      beforeEach (done) ->
         @client = redis.createClient()
         sinon.stub @client, 'set'
         @flowData =
@@ -13,13 +13,13 @@ describe 'ConfigrationSaverRedis', ->
             data: {}
 
         @sut = new ConfigrationSaverRedis flowId: 'some-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, {client: @client}
-        @sut.save()
+        @sut.save done
 
       it 'should save to redis', ->
         expect(@client.set).to.have.been.calledWith 'some-flow-uuid/my-instance-id/router/config', '{}'
 
     describe 'when called with a new set of flow data', ->
-      beforeEach ->
+      beforeEach (done) ->
         @client = redis.createClient()
         sinon.stub @client, 'set'
         @flowData =
@@ -28,13 +28,13 @@ describe 'ConfigrationSaverRedis', ->
             data: {}
 
         @sut = new ConfigrationSaverRedis flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, {client: @client}
-        @sut.save()
+        @sut.save done
 
       it 'should save the new flow data to redis', ->
         expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/router/config', '{}'
 
     describe 'when called with a new set of flow data', ->
-      beforeEach ->
+      beforeEach (done) ->
         @client = redis.createClient()
         sinon.stub @client, 'set'
         @flowData =
@@ -52,7 +52,7 @@ describe 'ConfigrationSaverRedis', ->
             data: {}
 
         @sut = new ConfigrationSaverRedis flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, {client: @client}
-        @sut.save()
+        @sut.save done
 
       it 'should save the new flow data to redis', ->
         expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/some-node-uuid/data', '{"cats":true}'
@@ -63,7 +63,7 @@ describe 'ConfigrationSaverRedis', ->
         expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/meshblu-output/data', '{}'
 
     describe 'when data is missing', ->
-      beforeEach ->
+      beforeEach (done) ->
         @client = redis.createClient()
         sinon.stub @client, 'set'
         @flowData =
@@ -71,14 +71,14 @@ describe 'ConfigrationSaverRedis', ->
             config: {}
 
         @sut = new ConfigrationSaverRedis flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, {client: @client}
-        @sut.save()
+        @sut.save done
 
       it 'should save the new flow data to redis', ->
         expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/foo/config', '{}'
         expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/foo/data', '{}'
 
     describe 'when config is missing', ->
-      beforeEach ->
+      beforeEach (done) ->
         @client = redis.createClient()
         sinon.stub @client, 'set'
         @flowData =
@@ -86,7 +86,7 @@ describe 'ConfigrationSaverRedis', ->
             data: {}
 
         @sut = new ConfigrationSaverRedis flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, {client: @client}
-        @sut.save()
+        @sut.save done
 
       it 'should save the new flow data to redis', ->
         expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/foo/config', '{}'
