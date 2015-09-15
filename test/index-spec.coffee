@@ -12,8 +12,8 @@ describe 'ConfigrationSaverRedis', ->
             config: {}
             data: {}
 
-        @sut = new ConfigrationSaverRedis flowId: 'some-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, {client: @client}
-        @sut.save done
+        @sut = new ConfigrationSaverRedis @client
+        @sut.save flowId: 'some-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
       it 'should save to redis', ->
         expect(@client.set).to.have.been.calledWith 'some-flow-uuid/my-instance-id/router/config', '{}'
@@ -27,8 +27,8 @@ describe 'ConfigrationSaverRedis', ->
             config: {}
             data: {}
 
-        @sut = new ConfigrationSaverRedis flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, {client: @client}
-        @sut.save done
+        @sut = new ConfigrationSaverRedis @client
+        @sut.save flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
       it 'should save the new flow data to redis', ->
         expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/router/config', '{}'
@@ -51,8 +51,8 @@ describe 'ConfigrationSaverRedis', ->
             config: {}
             data: {}
 
-        @sut = new ConfigrationSaverRedis flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, {client: @client}
-        @sut.save done
+        @sut = new ConfigrationSaverRedis @client
+        @sut.save flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
       it 'should save the new flow data to redis', ->
         expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/some-node-uuid/data', '{"cats":true}'
@@ -70,8 +70,8 @@ describe 'ConfigrationSaverRedis', ->
           foo:
             config: {}
 
-        @sut = new ConfigrationSaverRedis flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, {client: @client}
-        @sut.save done
+        @sut = new ConfigrationSaverRedis @client
+        @sut.save flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
       it 'should save the new flow data to redis', ->
         expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/foo/config', '{}'
@@ -85,8 +85,8 @@ describe 'ConfigrationSaverRedis', ->
           foo:
             data: {}
 
-        @sut = new ConfigrationSaverRedis flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, {client: @client}
-        @sut.save done
+        @sut = new ConfigrationSaverRedis @client
+        @sut.save flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
       it 'should save the new flow data to redis', ->
         expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/foo/config', '{}'
