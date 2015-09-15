@@ -2,17 +2,19 @@ redis = require 'redis'
 ConfigrationSaverRedis = require '../index'
 
 describe 'ConfigrationSaverRedis', ->
+  beforeEach ->
+    @client =
+      set: sinon.stub()
+    @sut = new ConfigrationSaverRedis @client
+
   describe '->save', ->
     describe 'when called with flow data', ->
       beforeEach (done) ->
-        @client = redis.createClient()
-        sinon.stub @client, 'set'
         @flowData =
           router:
             config: {}
             data: {}
 
-        @sut = new ConfigrationSaverRedis @client
         @sut.save flowId: 'some-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
       it 'should save to redis', ->
@@ -20,14 +22,11 @@ describe 'ConfigrationSaverRedis', ->
 
     describe 'when called with a new set of flow data', ->
       beforeEach (done) ->
-        @client = redis.createClient()
-        sinon.stub @client, 'set'
         @flowData =
           router:
             config: {}
             data: {}
 
-        @sut = new ConfigrationSaverRedis @client
         @sut.save flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
       it 'should save the new flow data to redis', ->
@@ -35,8 +34,6 @@ describe 'ConfigrationSaverRedis', ->
 
     describe 'when called with a new set of flow data', ->
       beforeEach (done) ->
-        @client = redis.createClient()
-        sinon.stub @client, 'set'
         @flowData =
           router:
             config:
@@ -51,7 +48,6 @@ describe 'ConfigrationSaverRedis', ->
             config: {}
             data: {}
 
-        @sut = new ConfigrationSaverRedis @client
         @sut.save flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
       it 'should save the new flow data to redis', ->
@@ -64,13 +60,10 @@ describe 'ConfigrationSaverRedis', ->
 
     describe 'when data is missing', ->
       beforeEach (done) ->
-        @client = redis.createClient()
-        sinon.stub @client, 'set'
         @flowData =
           foo:
             config: {}
 
-        @sut = new ConfigrationSaverRedis @client
         @sut.save flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
       it 'should save the new flow data to redis', ->
@@ -79,13 +72,10 @@ describe 'ConfigrationSaverRedis', ->
 
     describe 'when config is missing', ->
       beforeEach (done) ->
-        @client = redis.createClient()
-        sinon.stub @client, 'set'
         @flowData =
           foo:
             data: {}
 
-        @sut = new ConfigrationSaverRedis @client
         @sut.save flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
       it 'should save the new flow data to redis', ->
