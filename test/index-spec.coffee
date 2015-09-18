@@ -6,6 +6,7 @@ describe 'ConfigrationSaverRedis', ->
     @client =
       set: sinon.stub()
     @sut = new ConfigrationSaverRedis @client
+    @client.set.yields null
 
   describe '->save', ->
     describe 'when called with flow data', ->
