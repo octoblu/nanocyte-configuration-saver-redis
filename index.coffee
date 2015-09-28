@@ -5,6 +5,10 @@ debug = require('debug')('nanocyte-configuration-saver-redis')
 class ConfigrationSaverRedis
   constructor: (@client) ->
 
+  clear: (options, callback) =>
+    {flowId} = options
+    @client.del "#{flowId}/*", callback
+
   save: (options, callback) =>
     {flowId, instanceId, flowData} = options
     debug "Saving #{flowId}/#{instanceId}"

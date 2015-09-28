@@ -5,8 +5,33 @@ describe 'ConfigrationSaverRedis', ->
   beforeEach ->
     @client =
       set: sinon.stub()
+      del: sinon.stub()
     @sut = new ConfigrationSaverRedis @client
     @client.set.yields null
+
+  describe '->clear', ->
+    describe 'when called with a flow', ->
+      beforeEach ->
+        @callback = sinon.spy()
+        @sut.clear flowId: 'some-flow-uuid', @callback
+
+      it 'should delete all keys related to that flowUuid', ->
+        expect(@client.del).to.have.been.calledWith 'some-flow-uuid/*'
+
+      describe 'when del yields an error', ->
+        beforeEach ->
+          @error = new Error 'something wong'
+          @client.del.yield @error
+
+        it 'should yield an error', ->
+          expect(@callback).to.have.been.calledWith @error
+
+      describe 'when del yields no error', ->
+        beforeEach ->
+          @client.del.yield null
+
+        it 'should yield an error', ->
+          expect(@callback).to.have.been.calledWithNoArguments
 
   describe '->save', ->
     describe 'when called with flow data', ->
@@ -52,12 +77,13 @@ describe 'ConfigrationSaverRedis', ->
         @sut.save flowId: 'some-other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
       it 'should save the new flow data to redis', ->
-        expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/some-node-uuid/data', '{"cats":true}'
-        expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/router/config', '{"foo":"bar"}'
-        expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/router/data', '{"data":"something"}'
-        expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/some-node-uuid/config', '{}'
-        expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/meshblu-output/config', '{}'
-        expect(@client.set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/meshblu-output/data', '{}'
+        set = @client.set
+        expect(set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/some-node-uuid/data', '{"cats":true}'
+        expect(set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/router/config', '{"foo":"bar"}'
+        expect(set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/router/data', '{"data":"something"}'
+        expect(set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/some-node-uuid/config', '{}'
+        expect(set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/meshblu-output/config', '{}'
+        expect(set).to.have.been.calledWith 'some-other-flow-uuid/my-instance-id/meshblu-output/data', '{}'
 
     describe 'when data is missing', ->
       beforeEach (done) ->
