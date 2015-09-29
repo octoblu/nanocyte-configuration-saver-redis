@@ -7,7 +7,7 @@ class ConfigrationSaverRedis
 
   clear: (options, callback) =>
     {flowId} = options
-    @client.del "#{flowId}/*", callback
+    @client.del flowId, callback
 
   save: (options, callback) =>
     {flowId, instanceId, flowData} = options
@@ -19,11 +19,11 @@ class ConfigrationSaverRedis
 
       async.parallel [
         (cb) =>
-          debug "set '#{flowId}/#{instanceId}/#{key}/data'", nodeConfig.data
-          @client.set "#{flowId}/#{instanceId}/#{key}/data", JSON.stringify(nodeConfig.data), cb
+          debug "hset '#{flowId} #{instanceId}/#{key}/data'", nodeConfig.data
+          @client.hset flowId, "#{instanceId}/#{key}/data", JSON.stringify(nodeConfig.data), cb
         (cb) =>
-          debug "set '#{flowId}/#{instanceId}/#{key}/config'", nodeConfig.config
-          @client.set "#{flowId}/#{instanceId}/#{key}/config", JSON.stringify(nodeConfig.config), cb
+          debug "hset '#{flowId}/#{instanceId}/#{key}/config'", nodeConfig.config
+          @client.hset flowId, "#{instanceId}/#{key}/config", JSON.stringify(nodeConfig.config), cb
       ], next
     , callback
 
