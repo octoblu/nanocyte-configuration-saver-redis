@@ -6,8 +6,10 @@ describe 'ConfigrationSaverRedis', ->
     @client =
       hset: sinon.stub()
       rename: sinon.stub()
+      exists: sinon.stub()
     @sut = new ConfigrationSaverRedis @client
     @client.hset.yields null
+    @client.exists.yields null, 1
 
   describe '->stop', ->
     describe 'when called with a flow', ->

@@ -7,7 +7,10 @@ class ConfigrationSaverRedis
 
   stop: (options, callback) =>
     {flowId} = options
-    @client.rename "#{flowId}-stop", flowId, callback
+    @client.exists "#{flowId}-stop", (error, result) =>
+      return callback error if error?
+      return callback null unless result > 0
+      @client.rename "#{flowId}-stop", flowId, callback
 
   save: (options, callback) =>
     {flowId, instanceId, flowData} = options
