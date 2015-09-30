@@ -5,30 +5,30 @@ describe 'ConfigrationSaverRedis', ->
   beforeEach ->
     @client =
       hset: sinon.stub()
-      del: sinon.stub()
+      rename: sinon.stub()
     @sut = new ConfigrationSaverRedis @client
     @client.hset.yields null
 
-  describe '->clear', ->
+  describe '->stop', ->
     describe 'when called with a flow', ->
       beforeEach ->
         @callback = sinon.spy()
-        @sut.clear flowId: 'some-flow-uuid', @callback
+        @sut.stop flowId: 'some-flow-uuid', @callback
 
-      it 'should delete all keys related to that flowUuid', ->
-        expect(@client.del).to.have.been.calledWith 'some-flow-uuid'
+      it 'should rename the flow-stop key to the flowUuid key', ->
+        expect(@client.rename).to.have.been.calledWith 'some-flow-uuid-stop', 'some-flow-uuid'
 
-      describe 'when del yields an error', ->
+      describe 'when rename yields an error', ->
         beforeEach ->
           @error = new Error 'something wong'
-          @client.del.yield @error
+          @client.rename.yield @error
 
         it 'should yield an error', ->
           expect(@callback).to.have.been.calledWith @error
 
-      describe 'when del yields no error', ->
+      describe 'when rename yields no error', ->
         beforeEach ->
-          @client.del.yield null
+          @client.rename.yield null
 
         it 'should yield an error', ->
           expect(@callback).to.have.been.calledWithNoArguments
