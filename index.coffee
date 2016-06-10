@@ -30,4 +30,11 @@ class ConfigrationSaverRedis
       ], next
     , callback
 
+  saveIotApp: (options, callback) =>
+    {appId, config, configSchema, flowId, instanceId, version} = options
+    debug "Saving IoTApp #{flowId} #{instanceId}"
+    @client.hset flowId, "#{instanceId}/iot-app/config", JSON.stringify({ appId, version, configSchema, config}), callback
+
+    callback
+
 module.exports = ConfigrationSaverRedis

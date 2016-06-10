@@ -1,3 +1,4 @@
+_     = require 'lodash'
 redis = require 'redis'
 ConfigrationSaverRedis = require '../index'
 
@@ -110,3 +111,36 @@ describe 'ConfigrationSaverRedis', ->
       it 'should save the new flow data to redis', ->
         expect(@client.hset).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/foo/config', '{}'
         expect(@client.hset).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/foo/data', '{}'
+
+  describe '->saveIotApp', ->
+    describe 'when called with a config and configSchema', ->
+      beforeEach (done) ->
+
+        configSchema =
+          type: 'object'
+          properties:
+            whatKindaTriggerDoYouWant:
+              type: 'string'
+              "x-node-map": [
+                {id: '1418a3c0-2dd2-11e6-9598-13e1d65cd653', property: 'payloadType'}
+              ]
+
+        config = whatKindaTriggerDoYouWant: 'none'
+
+        @iotAppConfig =
+          flowId: 'empty-flow'
+          instanceId: 'hi'
+          appId: 'iot-app'
+          version: '1.0.0'
+          configSchema: configSchema,
+          config: config
+
+        @sut.saveIotApp @iotAppConfig, done
+    # client.hset flowId, "#{instanceId}/iot-app/config",
+
+      it 'should save to redis', ->
+        expect(@client.hset).to.have.been.calledWith(
+          'empty-flow'
+          "hi/iot-app/config"
+          JSON.stringify(_.pick @iotAppConfig, 'appId', 'version', 'configSchema', 'config')
+        )
