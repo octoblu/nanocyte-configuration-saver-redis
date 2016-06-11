@@ -130,7 +130,7 @@ describe 'ConfigrationSaverRedis', ->
         @iotAppConfig =
           flowId: 'empty-flow'
           instanceId: 'hi'
-          bluprintId: 'iot-app'
+          appId: 'iot-app'
           version: '1.0.0'
           configSchema: configSchema,
           config: config
@@ -142,5 +142,5 @@ describe 'ConfigrationSaverRedis', ->
         expect(@client.hset).to.have.been.calledWith(
           'empty-flow'
           "hi/bluprint/config"
-          JSON.stringify(_.pick @iotAppConfig, 'bluprintId', 'version', 'configSchema', 'config')
+          JSON.stringify(_.pick @iotAppConfig, 'appId', 'version', 'configSchema', 'config')
         )

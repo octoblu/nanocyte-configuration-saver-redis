@@ -31,9 +31,9 @@ class ConfigrationSaverRedis
     , callback
 
   linkToBluprint: (options, callback) =>
-    {bluprintId, config, configSchema, flowId, instanceId, version} = options
+    {appId, config, configSchema, flowId, instanceId, version} = options
     debug "linking to bluprint #{flowId} #{instanceId}"
-    @client.hset flowId, "#{instanceId}/bluprint/config", JSON.stringify({ bluprintId, version, configSchema, config}), callback
+    @client.hset flowId, "#{instanceId}/bluprint/config", JSON.stringify({ appId, version, configSchema, config}), callback
 
     callback
 
