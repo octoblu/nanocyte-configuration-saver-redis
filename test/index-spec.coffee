@@ -112,7 +112,7 @@ describe 'ConfigrationSaverRedis', ->
         expect(@client.hset).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/foo/config', '{}'
         expect(@client.hset).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/foo/data', '{}'
 
-  describe '->saveIotApp', ->
+  describe '->linkToBluprint', ->
     describe 'when called with a config and configSchema', ->
       beforeEach (done) ->
 
@@ -130,17 +130,17 @@ describe 'ConfigrationSaverRedis', ->
         @iotAppConfig =
           flowId: 'empty-flow'
           instanceId: 'hi'
-          appId: 'iot-app'
+          bluprintId: 'iot-app'
           version: '1.0.0'
           configSchema: configSchema,
           config: config
 
-        @sut.saveIotApp @iotAppConfig, done
+        @sut.linkToBluprint @iotAppConfig, done
     # client.hset flowId, "#{instanceId}/iot-app/config",
 
       it 'should save to redis', ->
         expect(@client.hset).to.have.been.calledWith(
           'empty-flow'
-          "hi/iot-app/config"
-          JSON.stringify(_.pick @iotAppConfig, 'appId', 'version', 'configSchema', 'config')
+          "hi/bluprint/config"
+          JSON.stringify(_.pick @iotAppConfig, 'bluprintId', 'version', 'configSchema', 'config')
         )

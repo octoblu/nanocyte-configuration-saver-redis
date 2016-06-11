@@ -30,10 +30,10 @@ class ConfigrationSaverRedis
       ], next
     , callback
 
-  saveIotApp: (options, callback) =>
-    {appId, config, configSchema, flowId, instanceId, version} = options
-    debug "Saving IoTApp #{flowId} #{instanceId}"
-    @client.hset flowId, "#{instanceId}/iot-app/config", JSON.stringify({ appId, version, configSchema, config}), callback
+  linkToBluprint: (options, callback) =>
+    {bluprintId, config, configSchema, flowId, instanceId, version} = options
+    debug "linking to bluprint #{flowId} #{instanceId}"
+    @client.hset flowId, "#{instanceId}/bluprint/config", JSON.stringify({ bluprintId, version, configSchema, config}), callback
 
     callback
 
