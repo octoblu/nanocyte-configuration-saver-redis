@@ -20,10 +20,12 @@ describe 'ConfigrationSaverRedis', ->
     @sut = new ConfigrationSaverRedis {@client, @datastore}
 
   describe '->stop', ->
+    beforeEach (done) ->
+      @client.hset 'some-flow-uuid-stop', 'foo', '{}', done
+
     describe 'when called with a flow', ->
-      beforeEach ->
-        @callback = sinon.spy()
-        @sut.stop flowId: 'some-flow-uuid', @callback
+      beforeEach (done) ->
+        @sut.stop flowId: 'some-flow-uuid', done
 
       it 'should rename the flow-stop key to the flowUuid key', (done) ->
         @client.exists 'some-flow-uuid-stop', (error, exists) =>
