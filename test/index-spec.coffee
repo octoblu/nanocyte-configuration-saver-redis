@@ -1,6 +1,7 @@
 _     = require 'lodash'
 Datastore = require 'meshblu-core-datastore'
 mongojs = require 'mongojs'
+Redis = require 'ioredis'
 ConfigrationSaverRedis = require '../index'
 
 describe 'ConfigrationSaverRedis', ->
@@ -11,15 +12,12 @@ describe 'ConfigrationSaverRedis', ->
       collection: 'instances'
     db.instances.remove done
 
-  beforeEach ->
-    @client =
-      hset: sinon.stub()
-      rename: sinon.stub()
-      exists: sinon.stub()
+  beforeEach (done) ->
+    @client = new Redis dropBufferSupport: true
+    @client.on 'ready', done
 
+  beforeEach ->
     @sut = new ConfigrationSaverRedis {@client, @datastore}
-    @client.hset.yields null
-    @client.exists.yields null, 1
 
   describe '->stop', ->
     describe 'when called with a flow', ->
@@ -27,23 +25,17 @@ describe 'ConfigrationSaverRedis', ->
         @callback = sinon.spy()
         @sut.stop flowId: 'some-flow-uuid', @callback
 
-      it 'should rename the flow-stop key to the flowUuid key', ->
-        expect(@client.rename).to.have.been.calledWith 'some-flow-uuid-stop', 'some-flow-uuid'
+      it 'should rename the flow-stop key to the flowUuid key', (done) ->
+        @client.exists 'some-flow-uuid-stop', (error, exists) =>
+          return done error if error?
+          expect(exists).to.equal 0
+          done()
 
-      describe 'when rename yields an error', ->
-        beforeEach ->
-          @error = new Error 'something wong'
-          @client.rename.yield @error
-
-        it 'should yield an error', ->
-          expect(@callback).to.have.been.calledWith @error
-
-      describe 'when rename yields no error', ->
-        beforeEach ->
-          @client.rename.yield null
-
-        it 'should yield an error', ->
-          expect(@callback).to.have.been.calledWithNoArguments
+      it 'should rename the flow-stop key to the flowUuid key', (done) ->
+        @client.exists 'some-flow-uuid', (error, exists) =>
+          return done error if error?
+          expect(exists).to.equal 1
+          done()
 
   describe '->save', ->
     describe 'when called with flow data', ->
@@ -61,8 +53,11 @@ describe 'ConfigrationSaverRedis', ->
           expect(JSON.parse flowData).to.deep.equal @flowData
           done()
 
-      it 'should save to redis', ->
-        expect(@client.hset).to.have.been.calledWith 'some-flow-uuid', 'my-instance-id/router/config', '{}'
+      it 'should save to redis', (done) ->
+        @client.hget 'some-flow-uuid', 'my-instance-id/router/config', (error, data) =>
+          return done error if error?
+          expect(data).to.equal '{}'
+          done()
 
     describe 'when called with a new set of flow data', ->
       beforeEach (done) ->
@@ -73,8 +68,11 @@ describe 'ConfigrationSaverRedis', ->
 
         @sut.save flowId: 'other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
-      it 'should save the new flow data to redis', ->
-        expect(@client.hset).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/router/config', '{}'
+      it 'should save the new flow data to redis', (done) ->
+        @client.hget 'other-flow-uuid', 'my-instance-id/router/config', (error, data) =>
+          return done error if error?
+          expect(data).to.equal '{}'
+          done()
 
     describe 'when called with a new set of flow data', ->
       beforeEach (done) ->
@@ -94,14 +92,25 @@ describe 'ConfigrationSaverRedis', ->
 
         @sut.save flowId: 'other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
-      it 'should save the new flow data to redis', ->
-        set = @client.hset
-        expect(set).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/some-node-uuid/data', '{"cats":true}'
-        expect(set).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/router/config', '{"foo":"bar"}'
-        expect(set).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/router/data', '{"data":"something"}'
-        expect(set).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/some-node-uuid/config', '{}'
-        expect(set).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/meshblu-output/config', '{}'
-        expect(set).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/meshblu-output/data', '{}'
+      it 'should save the new flow data to redis', (done) ->
+        fields = [
+          'my-instance-id/some-node-uuid/data'
+          'my-instance-id/router/config'
+          'my-instance-id/router/data'
+          'my-instance-id/some-node-uuid/config'
+          'my-instance-id/meshblu-output/config'
+          'my-instance-id/meshblu-output/data'
+        ]
+        @client.hmget 'other-flow-uuid', fields, (error, result) =>
+          return done error if error?
+
+          expect(result[0]).to.equal '{"cats":true}'
+          expect(result[1]).to.equal '{"foo":"bar"}'
+          expect(result[2]).to.equal '{"data":"something"}'
+          expect(result[3]).to.equal '{}'
+          expect(result[4]).to.equal '{}'
+          expect(result[5]).to.equal '{}'
+          done()
 
     describe 'when data is missing', ->
       beforeEach (done) ->
@@ -111,9 +120,17 @@ describe 'ConfigrationSaverRedis', ->
 
         @sut.save flowId: 'other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
-      it 'should save the new flow data to redis', ->
-        expect(@client.hset).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/foo/config', '{}'
-        expect(@client.hset).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/foo/data', '{}'
+      it 'should save the new flow data to redis', (done) ->
+        fields = [
+          'my-instance-id/foo/config'
+          'my-instance-id/foo/data'
+          ]
+        @client.hmget 'other-flow-uuid', fields, (error, result) =>
+          return done error if error?
+
+          expect(result[0]).to.equal '{}'
+          expect(result[1]).to.equal '{}'
+          done()
 
     describe 'when config is missing', ->
       beforeEach (done) ->
@@ -123,9 +140,17 @@ describe 'ConfigrationSaverRedis', ->
 
         @sut.save flowId: 'other-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
 
-      it 'should save the new flow data to redis', ->
-        expect(@client.hset).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/foo/config', '{}'
-        expect(@client.hset).to.have.been.calledWith 'other-flow-uuid', 'my-instance-id/foo/data', '{}'
+      it 'should save the new flow data to redis', (done) ->
+        fields = [
+          'my-instance-id/foo/config'
+          'my-instance-id/foo/data'
+          ]
+        @client.hmget 'other-flow-uuid', fields, (error, result) =>
+          return done error if error?
+
+          expect(result[0]).to.equal '{}'
+          expect(result[1]).to.equal '{}'
+          done()
 
   describe '->linkToBluprint', ->
     describe 'when called with a config and configSchema', ->
@@ -151,11 +176,10 @@ describe 'ConfigrationSaverRedis', ->
           config: config
 
         @sut.linkToBluprint @iotAppConfig, done
-    # client.hset flowId, "#{instanceId}/iot-app/config",
 
-      it 'should save to redis', ->
-        expect(@client.hset).to.have.been.calledWith(
-          'empty-flow'
-          "hi/bluprint/config"
-          JSON.stringify(_.pick @iotAppConfig, 'appId', 'version', 'configSchema', 'config')
-        )
+      it 'should save to redis', (done) ->
+        @client.hget 'empty-flow', 'hi/bluprint/config', (error, result) =>
+          return done error if error?
+
+          expect(result).to.equal JSON.stringify(_.pick @iotAppConfig, 'appId', 'version', 'configSchema', 'config')
+          done()
