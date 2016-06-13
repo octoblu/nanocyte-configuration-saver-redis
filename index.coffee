@@ -3,7 +3,7 @@ async = require 'async'
 debug = require('debug')('nanocyte-configuration-saver-redis')
 
 class ConfigrationSaverRedis
-  constructor: (@client) ->
+  constructor: ({@client, @datastore}) ->
 
   stop: (options, callback) =>
     {flowId} = options
@@ -13,6 +13,17 @@ class ConfigrationSaverRedis
       @client.rename "#{flowId}-stop", flowId, callback
 
   save: (options, callback) =>
+    tasks = [
+      async.apply @_saveMongo, options
+      async.apply @_saveRedis, options
+    ]
+    async.series tasks, callback
+
+  _saveMongo: (options, callback) =>
+    {flowId, instanceId, flowData} = options
+    @datastore.insert {flowId, instanceId, flowData}, callback
+
+  _saveRedis: (options, callback) =>
     {flowId, instanceId, flowData} = options
     debug "Saving #{flowId} #{instanceId}"
     async.each _.keys(flowData), (key, next) =>
@@ -20,14 +31,12 @@ class ConfigrationSaverRedis
       nodeConfig.data ?= {}
       nodeConfig.config ?= {}
 
-      async.parallel [
-        (cb) =>
-          debug "hset #{flowId} '#{instanceId}/#{key}/data'", nodeConfig.data
-          @client.hset flowId, "#{instanceId}/#{key}/data", JSON.stringify(nodeConfig.data), cb
-        (cb) =>
-          debug "hset #{flowId} '#{instanceId}/#{key}/config'", nodeConfig.config
-          @client.hset flowId, "#{instanceId}/#{key}/config", JSON.stringify(nodeConfig.config), cb
-      ], next
+      tasks = [
+        async.apply @client.hset, flowId, "#{instanceId}/#{key}/data", JSON.stringify(nodeConfig.data)
+        async.apply @client.hset, flowId, "#{instanceId}/#{key}/config", JSON.stringify(nodeConfig.config)
+      ]
+
+      async.parallel tasks, next
     , callback
 
   linkToBluprint: (options, callback) =>

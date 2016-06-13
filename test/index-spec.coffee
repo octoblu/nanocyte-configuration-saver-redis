@@ -1,14 +1,23 @@
 _     = require 'lodash'
-redis = require 'redis'
+Datastore = require 'meshblu-core-datastore'
+mongojs = require 'mongojs'
 ConfigrationSaverRedis = require '../index'
 
 describe 'ConfigrationSaverRedis', ->
+  beforeEach (done) ->
+    db = mongojs 'localhost/flow-config-test', ['instances']
+    @datastore = new Datastore
+      database: db
+      collection: 'instances'
+    db.instances.remove done
+
   beforeEach ->
     @client =
       hset: sinon.stub()
       rename: sinon.stub()
       exists: sinon.stub()
-    @sut = new ConfigrationSaverRedis @client
+
+    @sut = new ConfigrationSaverRedis {@client, @datastore}
     @client.hset.yields null
     @client.exists.yields null, 1
 
@@ -45,6 +54,12 @@ describe 'ConfigrationSaverRedis', ->
             data: {}
 
         @sut.save flowId: 'some-flow-uuid', instanceId: 'my-instance-id', flowData: @flowData, done
+
+      it 'should save to mongo', (done) ->
+        @datastore.findOne {flowId: 'some-flow-uuid', instanceId: 'my-instance-id'}, (error, {flowData}) =>
+          return done error if error?
+          expect(flowData).to.deep.equal @flowData
+          done()
 
       it 'should save to redis', ->
         expect(@client.hset).to.have.been.calledWith 'some-flow-uuid', 'my-instance-id/router/config', '{}'
