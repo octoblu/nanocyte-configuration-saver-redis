@@ -21,6 +21,7 @@ class ConfigrationSaverRedis
 
   _saveMongo: (options, callback) =>
     {flowId, instanceId, flowData} = options
+    flowData = JSON.stringify flowData
     @datastore.insert {flowId, instanceId, flowData}, callback
 
   _saveRedis: (options, callback) =>

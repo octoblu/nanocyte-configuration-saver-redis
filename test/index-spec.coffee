@@ -58,7 +58,7 @@ describe 'ConfigrationSaverRedis', ->
       it 'should save to mongo', (done) ->
         @datastore.findOne {flowId: 'some-flow-uuid', instanceId: 'my-instance-id'}, (error, {flowData}) =>
           return done error if error?
-          expect(flowData).to.deep.equal @flowData
+          expect(JSON.parse flowData).to.deep.equal @flowData
           done()
 
       it 'should save to redis', ->
