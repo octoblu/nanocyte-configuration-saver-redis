@@ -27,17 +27,19 @@ class ConfigrationSaverRedis
   _saveRedis: (options, callback) =>
     {flowId, instanceId, flowData} = options
     debug "Saving #{flowId} #{instanceId}"
+
     async.each _.keys(flowData), (key, next) =>
       nodeConfig = flowData[key]
       nodeConfig.data ?= {}
       nodeConfig.config ?= {}
 
-      tasks = [
-        async.apply @client.hset, flowId, "#{instanceId}/#{key}/data", JSON.stringify(nodeConfig.data)
-        async.apply @client.hset, flowId, "#{instanceId}/#{key}/config", JSON.stringify(nodeConfig.config)
+      data = [
+        "#{instanceId}/#{key}/data", JSON.stringify nodeConfig.data
+        "#{instanceId}/#{key}/config", JSON.stringify nodeConfig.config
       ]
 
-      async.parallel tasks, next
+      @client.hmset flowId, data..., next
+
     , callback
 
   linkToBluprint: (options, callback) =>
