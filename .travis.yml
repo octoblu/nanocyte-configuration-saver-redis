@@ -1,6 +1,9 @@
 language: node_js
 node_js:
 - '0.11'
+services:
+- redis
+- mongo
 addons:
   code_climate:
     repo_token: 08235004d6f5f28032ff831d50d8aa00ba977b463f9299a73ea6f6499a7aa672
