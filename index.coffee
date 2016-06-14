@@ -19,6 +19,13 @@ class ConfigrationSaverRedis
     ]
     async.series tasks, callback
 
+  saveIotApp: (options, callback) =>
+    tasks = [
+      async.apply @_saveIotAppMongo, options
+      async.apply @_saveIotAppRedis, options
+    ]
+    async.series tasks, callback
+
   _saveMongo: (options, callback) =>
     {flowId, instanceId, flowData} = options
     flowData = JSON.stringify flowData
@@ -36,6 +43,29 @@ class ConfigrationSaverRedis
       data = [
         "#{instanceId}/#{key}/data", JSON.stringify nodeConfig.data
         "#{instanceId}/#{key}/config", JSON.stringify nodeConfig.config
+      ]
+
+      @client.hmset flowId, data..., next
+
+    , callback
+
+  _saveIotAppMongo: (options, callback) =>
+    {flowId, version, flowData} = options
+    flowData = JSON.stringify flowData
+    @datastore.insert {flowId, version, flowData}, callback
+
+  _saveIotAppRedis: (options, callback) =>
+    {flowId, version, flowData} = options
+    debug "Saving #{flowId} #{version}"
+
+    async.each _.keys(flowData), (key, next) =>
+      nodeConfig = flowData[key]
+      nodeConfig.data ?= {}
+      nodeConfig.config ?= {}
+
+      data = [
+        "bluprint/#{version}/#{key}/data", JSON.stringify nodeConfig.data
+        "bluprint/#{version}/#{key}/config", JSON.stringify nodeConfig.config
       ]
 
       @client.hmset flowId, data..., next

@@ -154,6 +154,28 @@ describe 'ConfigrationSaverRedis', ->
           expect(result[1]).to.equal '{}'
           done()
 
+  describe '->saveIotApp', ->
+    describe 'when called with an IoT App', ->
+      beforeEach (done) ->
+        @flowData =
+          router:
+            config: {}
+            data: {}
+
+        @sut.saveIotApp flowId: 'some-flow-uuid', version: '1.0.0', flowData: @flowData, done
+
+      it 'should save to mongo', (done) ->
+        @datastore.findOne {flowId: 'some-flow-uuid', version: '1.0.0'}, (error, {flowData}) =>
+          return done error if error?
+          expect(JSON.parse flowData).to.deep.equal @flowData
+          done()
+
+      it 'should save to redis', (done) ->
+        @client.hget 'some-flow-uuid', 'bluprint/1.0.0/router/config', (error, data) =>
+          return done error if error?
+          expect(data).to.equal '{}'
+          done()
+
   describe '->linkToBluprint', ->
     describe 'when called with a config and configSchema', ->
       beforeEach (done) ->
