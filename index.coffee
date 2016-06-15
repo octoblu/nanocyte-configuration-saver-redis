@@ -2,7 +2,7 @@ _ = require 'lodash'
 async = require 'async'
 debug = require('debug')('nanocyte-configuration-saver-redis')
 
-class ConfigrationSaverRedis
+class ConfigurationSaverRedis
   constructor: ({@client, @datastore}) ->
 
   stop: (options, callback) =>
@@ -50,13 +50,13 @@ class ConfigrationSaverRedis
     , callback
 
   _saveIotAppMongo: (options, callback) =>
-    {flowId, version, flowData} = options
+    {appId, version, flowData} = options
     flowData = JSON.stringify flowData
-    @datastore.insert {flowId, version, flowData}, callback
+    @datastore.insert {appId, version, flowData}, callback
 
   _saveIotAppRedis: (options, callback) =>
-    {flowId, version, flowData} = options
-    debug "Saving #{flowId} #{version}"
+    {appId, version, flowData} = options
+    debug "Saving #{appId} #{version}"
 
     async.each _.keys(flowData), (key, next) =>
       nodeConfig = flowData[key]
@@ -64,11 +64,11 @@ class ConfigrationSaverRedis
       nodeConfig.config ?= {}
 
       data = [
-        "bluprint/#{version}/#{key}/data", JSON.stringify nodeConfig.data
-        "bluprint/#{version}/#{key}/config", JSON.stringify nodeConfig.config
+        "#{version}/#{key}/data", JSON.stringify nodeConfig.data
+        "#{version}/#{key}/config", JSON.stringify nodeConfig.config
       ]
 
-      @client.hmset flowId, data..., next
+      @client.hmset "bluprint/#{appId}", data..., next
 
     , callback
 
@@ -79,4 +79,4 @@ class ConfigrationSaverRedis
 
     callback
 
-module.exports = ConfigrationSaverRedis
+module.exports = ConfigurationSaverRedis

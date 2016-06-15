@@ -39,6 +39,33 @@ describe 'ConfigrationSaverRedis', ->
           expect(exists).to.equal 1
           done()
 
+  describe '->saveIotApp', ->
+    describe 'when called with flow data', ->
+      beforeEach (done) ->
+        @flowData =
+          router:
+            config: {}
+            data: {}
+
+        @sut.saveIotApp appId: 'some-app-uuid', version: '1.0.0', flowData: @flowData, done
+
+      afterEach (done) ->
+        @client.del 'bluprint/some-app-uuid', =>
+          @datastore.remove {appId: 'some-app-uuid'}, done
+
+      it 'should save to mongo', (done) ->
+        @datastore.findOne {appId: 'some-app-uuid', version: '1.0.0'}, (error, response) =>
+          return done error if error?
+          expect(JSON.parse response?.flowData).to.deep.equal @flowData
+          done()
+
+      it 'should save to redis', (done) ->
+        @client.hget 'bluprint/some-app-uuid', '1.0.0/router/config', (error, data) =>
+          return done error if error?
+          expect(data).to.equal '{}'
+          done()
+
+
   describe '->save', ->
     describe 'when called with flow data', ->
       beforeEach (done) ->
@@ -152,28 +179,6 @@ describe 'ConfigrationSaverRedis', ->
 
           expect(result[0]).to.equal '{}'
           expect(result[1]).to.equal '{}'
-          done()
-
-  describe '->saveIotApp', ->
-    describe 'when called with an IoT App', ->
-      beforeEach (done) ->
-        @flowData =
-          router:
-            config: {}
-            data: {}
-
-        @sut.saveIotApp flowId: 'some-flow-uuid', version: '1.0.0', flowData: @flowData, done
-
-      it 'should save to mongo', (done) ->
-        @datastore.findOne {flowId: 'some-flow-uuid', version: '1.0.0'}, (error, {flowData}) =>
-          return done error if error?
-          expect(JSON.parse flowData).to.deep.equal @flowData
-          done()
-
-      it 'should save to redis', (done) ->
-        @client.hget 'some-flow-uuid', 'bluprint/1.0.0/router/config', (error, data) =>
-          return done error if error?
-          expect(data).to.equal '{}'
           done()
 
   describe '->linkToBluprint', ->
